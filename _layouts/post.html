@@ -11,13 +11,35 @@ tail_includes:
 
 {% include lang.html %}
 
+<div style="text-align: center;">
 <h1 data-toc-skip>{{ page.title }}</h1>
+</div>
 
-<div class="post-meta text-muted">
+<div class="post-meta text-muted text-center">
     <!-- published date -->
     <span>
       {{ site.data.locales[lang].post.posted }}
       {% include datetime.html date=page.date tooltip=true lang=lang %}
+
+      <!-- author(s) -->
+      {% if page.author %}
+        {% assign authors = page.author %}
+      {% elsif page.authors %}
+        {% assign authors = page.authors %}
+      {% endif %}
+
+      {{ site.data.locales[lang].post.written_by }}
+
+      <em>
+      {% if authors %}
+        {% for author in authors %}
+          <a href="{{ site.data.authors[author].url }}">{{ site.data.authors[author].name }}</a>
+          {% unless forloop.last %}</em>, <em>{% endunless %}
+        {% endfor %}
+      {% else %}
+        <a href="{{ site.social.links[0] }}">{{ site.social.name }}</a>
+      {% endif %}
+      </em>
     </span>
 
     <!-- lastmod date -->
@@ -47,9 +69,10 @@ tail_includes:
     </div>
   {% endif %}
 
-  <div class="d-flex justify-content-between">
+<!--  <div class="d-flex justify-content-between">-->
+  <div class="text-end">
     <!-- author(s) -->
-    <span>
+    <!--<span>
       {% if page.author %}
         {% assign authors = page.author %}
       {% elsif page.authors %}
@@ -68,7 +91,7 @@ tail_includes:
         <a href="{{ site.social.links[0] }}">{{ site.social.name }}</a>
       {% endif %}
       </em>
-    </span>
+    </span>-->
 
     <div>
       <!-- read time -->
