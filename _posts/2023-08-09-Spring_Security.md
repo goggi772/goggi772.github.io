@@ -47,7 +47,7 @@ Credential은 리소스에 접근하려고 하는 대상의 비밀번호를 나�
 
 <br/>
 
-<h3 class="text-center"> UsernamePasswordAuthenticationToken </h3> 
+<h4 class="text-center"> UsernamePasswordAuthenticationToken </h4> 
 
 <br/>
 
@@ -117,7 +117,7 @@ request가 들어오면 먼저 `AuthenticationFilter`가 request를 가로채 �
 Principal, 비밀번호를 Credentials로 사용함을 볼 수 있다.
 <br/>
 
-<h3 class="text-center"> AuthenticationManager </h3>
+<h4 class="text-center"> AuthenticationManager </h4>
 
 <br/>
 
@@ -148,7 +148,7 @@ public class ProviderManager implements AuthenticationManager, MessageSourceAwar
 }
 ```
 
-<h3 class="text-center"> AuthenticationProvider </h3>
+<h4 class="text-center"> AuthenticationProvider </h4>
 
 ```java
 public interface AuthenticationProvider {
@@ -166,7 +166,7 @@ public interface AuthenticationProvider {
 위해 `UserDetailsService`를 사용한다.  
 <br/>
 
-<h3 class="text-center"> UserDetailsService </h3>
+<h4 class="text-center"> UserDetailsService </h4>
 
 <br/>
 
@@ -179,17 +179,17 @@ public interface UserDetailsService {
 ```
 
 Username을 기반으로 DB에 있는 회원 정보를 검색하여 일치하는 회원 정보가 있으면 `UserDetails`를 구현한
-객체를 반환한다. `UserDetailsService`는 이를 상속받는 커스텀 DetailsService를 구현하여야 한다.
+객체를 반환한다. 개발자는 이 `UserDetailsService`를 상속받는 커스텀 DetailsService를 구현하여야 한다.  
 <br/>
 위 과정을 거쳐 `AuthenticationProvider`에 의해 사용자 인증이 성공적으로 이루어 지면 완전한 인증객체가
 반환이 되고 이를 `AuthenticationManager`가 `AuthenticationFilter`에게 전달하고 필터는
-`AuthenticationFilter`는 이를 `SecurityContext`에 저장한다.  
-이 과정에서 사용자 인증에 실패하게 되면 `AuthenticaionException`을 발생시키게 된다.
+`AuthenticationFilter`는 이를 `SecurityContext`에 저장한다. 이 과정에서 사용자 인증에 
+실패하게 되면 `AuthenticaionException`을 발생시키게 된다.
 
 
 <br/>
 
-<h3 class="text-center"> 요약 </h3>
+<h4 class="text-center"> 요약 </h4>
 
 <br/>
 
