@@ -44,6 +44,65 @@ spring.datasource.password=비밀번호
 대해 요구하는 권한이나 로그인 방법, 성공 및 실패 핸들러 등을 설정해주어야 한다. Spring Security의
 빈을 설정해주는 클래스 `SecurityConfig`를 만들어 로그인 로직 등을 커스텀하여 사용할 수 있다.  
 
+그 전에 먼저 로그인을 하기 위한 데이터베이스 설정과 로그인 로직인 서비스 설정을 해보자.  
+Entity, Repository, DetailsService를 생성하면 된다.
+
+Entity
+```java
+@Entity
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+public class Member {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;   //회원 고유 number
+
+    @Column(nullable = false, length = 30, unique = true)
+    private String username;  //회원 id
+
+    @Column(nullable = false, length = 100)
+    private String password;   //비밀번호
+
+    @Column(nullable = false, length = 50)
+    private String email;  //이메일
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+}
+```
+Repository
+```java
+@Repository
+public interface MemberRepository extends JpaRepository<Member, Long> {
+}
+```
+
+DetailsService
+```java
+@RequiredArgsConstructor
+@Component
+public class MemberDetailsService implements UserDetailsService {
+
+    private final MemberRepository memberRepository;
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Member member = memberRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("NotFoundUserName"));
+        return new MemberDetails(member);
+    }
+
+}
+```
+
+<br/>
+
+이렇게 작성해 주면 Member이름을 가진 테이블이 생성되고 JPA를 사용하는 Repository에서 한줄의 명령어
+로 데이터를 가져오고 수정할 수 있게된다.
+
 ```java
 @RequiredArgsConstructor
 @Configuration
@@ -72,9 +131,7 @@ public class SecurityConfig {
                 .and()
                 .formLogin()   //formLogin형식 사용
                 .loginPage("/login")  //커스텀 로그인 화면
-                .loginProcessingUrl("/login/action")   //로그인 로직 url
                 .defaultSuccessUrl("/")     //로그인 성공시 url
-                .failureHandler(customAuthFailureHandler)      // 실패시 요청을 처리할 핸들러
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // 로그아웃 URL
@@ -86,4 +143,56 @@ public class SecurityConfig {
 }
 ```
 <br/>
+
+이렇게 커스텀을 해주면 form로그인을 사용하므로 원하는대로 로그인 화면을 바꿀 수 있다. 
+.loginPage("/login")의 코드가 내가 만들어 놓은 로그인 페이지를 알려주는 것이다. 그래서 controller
+에 위 경로를 지정해주면 커스텀한 로그인 화면을 사용할 수 있다.
+
+```java
+
+@Controller
+public class MemberLoginController {
+
+    @GetMapping("/login")
+    public String login_page() {
+        return "login";
+    }
+}
+    
+```
+
+thymeleaf로 작성한 html 로그인 화면
+
+```html
+<!DOCTYPE html>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div class="container">
+    <h1>로그인</h1>
+    <form th:action="@{/login/action}" method="post">
+        <div class="form-group">
+            <label th:for="username">아이디</label>
+            <input type="text" name="username" class="form-control" placeholder="아이디를 입력해주세요">
+        </div>
+
+        <div class="form-group">
+            <label th:for="password">비밀번호</label>
+            <input type="password" class="form-control" name="password" placeholder="비밀번호를 입력해주세요">
+        </div>
+        <button type="submit" class="btn btn-primary">로그인</button>
+        <button type="button" class="btn btn-primary" onClick="location.href='/login/register'">회원 가입</button>
+    </form>
+    <br/>
+</div>
+</body>
+</html>
+```
+
+![이미지](/assets/img/2023-08-11-securitylogin/loginpage.png "커스텀 로그인 화면")
+
 
