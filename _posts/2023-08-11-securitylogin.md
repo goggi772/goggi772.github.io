@@ -69,7 +69,7 @@ public class Member {
 만들고 @Entity 어노테이션을 쓰기만 하면 실행할 때 자동으로 클래스 이름을가진 테이블이 생성된다. 
 그 다음 Repository를 생성해보자.
 
-Repository
+### Repository
 ```java
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -85,7 +85,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 <br/>
 이제 Spring Security에서 사용하는 DetailsService를 작성해보자.
 
-DetailsService
+### DetailsService
 ```java
 @RequiredArgsConstructor
 @Component
@@ -102,32 +102,82 @@ public class MemberDetailsService implements UserDetailsService {
 }
 ```
 
-이렇게 `UserDetailsService`를 상속받는 클래스는 `loadUserByUsername`을 override하게 되는데
+이와같이 `UserDetailsService`를 상속받는 클래스는 `loadUserByUsername`을 override하게 되는데
 이는 Spring Security가 유저 아이디(username)을 이용해 유저를 찾고 그 유저에 대한 UserDetails를 
-반환하게 된다. 이때 유저가 존재하지 않으면 `UsernameNotFoundException`을 발생시키게 된다.
+반환하는 메소드이다. 이때 유저가 존재하지 않으면 `UsernameNotFoundException`을 발생시키게 된다.
+여기서는 `MemberDetails`클래스를 리턴하는데 이 클래스는 `UserDetails`를 상속받은 클래스이다.
+
+### MemberDetails
+```java
+@AllArgsConstructor
+public class MemberDetails implements UserDetails {
+    
+    private final Member member;
+
+    @Override //계정이 갖고있는 권한 목록을 리턴한다
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Collection<GrantedAuthority> collectors = new ArrayList<>();
+
+        collectors.add(() -> "ROLE_" + member.getRole());
+
+        return collectors;
+    }
+
+    @Override
+    public String getPassword() {
+        return member.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return member.getUsername();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+}
+
+```
+
+<br/>
+기본적으로 Spring Security에서 유저 정보를 담는 객체인 `UserDetails`가 있는데 이를 클래스에 상속
+시켜 사용하면 내가 임의대로 유저 정보를 담는 객체를 커스텀 할 수 있다.  
+<br/>
+그 후 Spring Security에서 여러 기능들을 커스텀 할 수 있는 `SecurityConfig`를 생성하였다.
+`SecurityConfig`가 무엇인지 설명해보자면 처음에 Spring Security를 추가하고 실행시키면
+아무 코드도 짜지 않았지만 밑의 사진과 같이 로그인 화면이 나오게 된다.
 
 
 ![이미지](/assets/img/2023-08-11-securitylogin/securityloginscreen.png "로그인 화면")
 
 <br/>
-이 화면이 Spring Security에서 제공하는 기본 로그인 화면이다. 주소창의 localhost:8080뒤에 어떤 것을
+이 화면은 Spring Security에서 제공하는 기본 로그인 화면이다. 주소창의 localhost:8080뒤에 어떤 것을
 쳐도 이와 같은 로그인 화면이 나올 것이다. 그 이유는 Spring Security가 기본적으로 모든 페이지에 대해 
 권한을 요구하는 것이기 때문이다. 즉, 페이지에 대한 권한을 설정하지 않아서 Spring Security가 요청을
-가로채 Spring Security login화면으로 redirection시키기 때문이다. 그래서 우리가 직접 각 페이지에
-대해 요구하는 권한이나 로그인 방법, 성공 및 실패 핸들러 등을 설정해주어야 한다. Spring Security의
-빈을 설정해주는 클래스 `SecurityConfig`를 만들어 로그인 로직 등을 커스텀하여 사용할 수 있다.  
-
-로그인기능을 구현하기 위해서는 데이터베이스 설정과 서비스 설정을 해야한다.
-Entity, Repository, DetailsService를 생성하면 된다.
-
-
-
-
+가로채 Spring Security login화면으로 redirection시킨다. 그래서 우리가 직접 각 페이지에
+대해 요구하는 권한이나 로그인 방법, 성공 및 실패 핸들러 등을 설정해주어야 한다. 이 설정을 관리하는 클래스
+가 `SecurityConfig`이다. `SecurityConfig`는 Spring Security의 빈을 설정해주는 클래스를 만들어 
+로그인 로직 등을 커스텀하여 사용할 수 있다.
 <br/>
 
-이렇게 작성해 주면 Member이름을 가진 테이블이 생성되고 JPA를 사용하는 Repository에서 한줄의 명령어
-로 데이터를 가져오고 수정할 수 있게된다. 
-
+### SecurityConfig
 ```java
 @RequiredArgsConstructor
 @Configuration
@@ -149,14 +199,16 @@ public class SecurityConfig {
 
         http.csrf().disable()
                 .authorizeRequests()  
-                .antMatchers("/", "/login/**", "/main/**", "/js/**",
+                .antMatchers("/login/**", "/main/**", "/js/**",
                   "/css/**", "/image/**").permitAll()   //위 경로는 인증필요 X
                 .anyRequest()  //그 외의 다른 요청들은
                 .authenticated()    //인증 필요
                 .and()
                 .formLogin()   //formLogin형식 사용
                 .loginPage("/login")  //커스텀 로그인 화면
+                .loginProcessingUrl("/login/action")   //로그인 실패 시 error, exception 파라미터 전송
                 .defaultSuccessUrl("/")     //로그인 성공시 url
+                .failureHandler(customAuthFailureHandler)   // 실패시 요청을 처리할 핸들러
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // 로그아웃 URL
@@ -170,9 +222,57 @@ public class SecurityConfig {
 <br/>
 
 이렇게 커스텀을 해주면 form로그인을 사용하므로 원하는대로 로그인 화면을 바꿀 수 있다. 
-.loginPage("/login")의 코드가 내가 만들어 놓은 로그인 페이지를 알려주는 것이다. 그래서 controller
-에 위 경로를 지정해주면 커스텀한 로그인 화면을 사용할 수 있다.
+loginPage("/login")의 코드가 내가 만들어 놓은 로그인 페이지를 알려주는 것이다. 그래서 Controller
+에 위 경로를 지정해주면 커스텀한 로그인 화면을 사용할 수 있다. 또한 
+loginProcessingUrl을 지정해주면 로그인을 처리할 Url을 지정할 수 있다. 그리고 failureHandler는
+로그인 실패시 요청을 처리할 Handler를 지정해주는 명령어이다. 그래서 커스텀 핸들러 클래스를 만들어 
+존재하지 않는 유저이거나 비밀번호가 안맞는 등의 로그인 실패 상황을 처리할 수 있게 만들었다.
+<br/>
 
+### CustomAuthFailureHandler
+```java
+@Component
+@Slf4j
+public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {  //로그인 실패 시 exception관리하는 handler
+    
+    /**
+     * HttpServletRequest : Request 정보
+     * HttpServletResponse : Response에 대해 설정할 수 있는 변수
+     * AuthenticationException : 로그인 실패 시 예외에 대한 정보
+     */
+    @Override
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                        AuthenticationException exception) throws IOException, ServletException {
+
+        String errorMessage;
+
+        if(exception instanceof UsernameNotFoundException){
+            errorMessage = "존재하지 않는 계정입니다. 회원가입 후 로그인해주세요.";
+        } else if (exception instanceof BadCredentialsException) {
+            errorMessage = "비밀번호가 맞지 않습니다. 다시 확인해주세요.";
+        } else if (exception instanceof InternalAuthenticationServiceException) {
+            errorMessage = "내부 시스템 문제로 로그인 요청을 처리할 수 없습니다. 관리자에게 문의하세요.";
+        } else if (exception instanceof AuthenticationCredentialsNotFoundException) {
+            errorMessage = "인증 요청이 거부되었습니다. 관리자에게 문의하세요.";
+        } else {
+            errorMessage = "알 수 없는 오류로 로그인 요청을 처리할 수 없습니다. 관리자에게 문의하세요.";
+        }
+
+        log.info("failureHandler : " + errorMessage);
+
+        errorMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);  //한글 인코딩 깨지는 문제 방지
+        setDefaultFailureUrl("/login/action?error=true&exception=" + errorMessage);
+        super.onAuthenticationFailure(request, response, exception);
+    }
+}
+```
+이와 같이 `SimpleUrlAuthenticationFailureHandler`를 상속받는 클래스를 만들게 되면 Spring 
+Security에서 로그인에 실패 했을 때 그 핸들러 클래스가 요청을 처리할 수 있게 한다. 그래서 위와같이
+`CustomAuthFailureHandler`클래스를 만들어 exception이 발생했을 때 종류별로 에러 메시지를 
+"/login/action"으로 보내게 된다.
+<br/>
+
+### Controller
 ```java
 
 @Controller
@@ -182,12 +282,23 @@ public class MemberLoginController {
     public String login_page() {
         return "login";
     }
+
+    @GetMapping("/login/action")  //로그인 실패 시 error와 exception 값을 받아 에러메시지 출력
+    public String getLoginPage(Model model,
+                               @RequestParam(value = "error", required = false) String error,
+                               @RequestParam(value = "exception", required = false) String exception) {
+        model.addAttribute("error", error);
+        model.addAttribute("exception", exception);
+        return "login2";
+    }
 }
-    
 ```
+Controller에서는 `SecurityConfig`에서 설정한 것처럼 로그인 페이지와 로그인을 처리할 Url을 지정해서
+로그인 과정이 진행되게 한다. getLoginPage는 위에서 말했듯이 error여부와 exception메시지를 model
+로 보내 화면에 띄워준다.
+<br/>
 
-thymeleaf로 작성한 html 로그인 화면
-
+### login.html
 ```html
 <!DOCTYPE html>
 <!-- Latest compiled and minified CSS -->
@@ -199,6 +310,10 @@ thymeleaf로 작성한 html 로그인 화면
 <body>
 <div class="container">
     <h1>로그인</h1>
+        <td>
+            <span th:if="${error}"
+                  th:text="${exception}" style="color:red"></span>
+        </td>
     <form th:action="@{/login/action}" method="post">
         <div class="form-group">
             <label th:for="username">아이디</label>
@@ -218,6 +333,20 @@ thymeleaf로 작성한 html 로그인 화면
 </html>
 ```
 
+화면은 thymeleaf를 사용하였다. 로그인 화면을 띄울 때 에러가 발생하게 되면 exception메시지를 
+띄우게 된다. 
+<br/>
+
+로그인 화면
 ![이미지](/assets/img/2023-08-11-securitylogin/loginpage.png "커스텀 로그인 화면")
+<br/>
+
+로그인 실패시
+![이미지](/assets/img/2023-08-11-securitylogin/loginfailure.png "로그인 실패 화면")
+<br/>
+
+로그인 성공
+![이미지](/assets/img/2023-08-11-securitylogin/main404.png "로그인 성공시 메인 화면")
+
 
 
