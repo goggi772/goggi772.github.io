@@ -18,9 +18,9 @@ timezone: Asia/Seoul
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Sun Yub # the main title
+title: Yub's Devlog # the main title
 
-tagline: 안녕하세요 # it will display as the sub-title
+tagline: 나의 개발일지 # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
@@ -76,7 +76,7 @@ theme_mode: # [light|dark]
 img_cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar:
+avatar: "assets/img/favicons/android-icon-144x144.png"
 
 # boolean type, the global switch for TOC in posts.
 toc: true

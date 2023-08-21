@@ -1,6 +1,12 @@
 ---
 layout: post
-title: "Spring Security로 login구현하기"
+title: "Spring Security로 로그인구현하기(1)"
+
+categories:
+  - Spring
+
+tags:
+  - [spring boot, security]
 ---
 
 이번에 Spring Boot도 공부할 겸 간단한 프로젝트를 만들었다. 그 중에서 가장 기본이 되는 로그인 기능을 

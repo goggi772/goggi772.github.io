@@ -1,6 +1,12 @@
 ---
 layout: post
 title: "Spring Security란?"
+
+categories:
+  - Spring
+
+tags:
+  - [spring boot, security]
 ---
 
 회원 관리 기능을 구현하기 위해서는 __인증(Authentication)__ 과 __인가(Authorization)__ 에 대한 
