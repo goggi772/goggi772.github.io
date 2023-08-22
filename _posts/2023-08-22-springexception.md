@@ -14,9 +14,9 @@ tags:
 
 Spring Security를 사용하여 로그인 및 인증 기능을 구현하던 도중에 알 수 없는 오류가 발생했다. 로그인 시에 
 아이디가 DB에 존재하지 않을 때 `MemberDetailsService`에서 `UsernameNotFoundException`을 
-발생시키고 `SecurityConfig`에서 failureHandler를 통해 **"존재하지 않는 계정입니다. 회원가입 
-후 로그인해주세요."** 라는 문구를 출력하게 코드를 작성했다. 하지만 예상과 다르게 비밀번호가 맞지 않을 
-때 출력되는 문구인 **"비밀번호가 맞지 않습니다. 다시 확인해주세요."** 문구가 출력되는 것이었다. 다시말해
+발생시키고 `SecurityConfig`에서 failureHandler를 통해 <mark>"존재하지 않는 계정입니다. 회원가입 
+후 로그인해주세요."</mark> 라는 문구를 출력하게 코드를 작성했다. 하지만 예상과 다르게 비밀번호가 맞지 않을 
+때 출력되는 문구인 <mark>"비밀번호가 맞지 않습니다. 다시 확인해주세요."</mark> 문구가 출력되는 것이었다. 다시말해
 `UsernameNotFoundException`이 발생해야 하는데 항상 `BadCredentialsException`이 발생한다는 것이다.  
 
 <br/>
