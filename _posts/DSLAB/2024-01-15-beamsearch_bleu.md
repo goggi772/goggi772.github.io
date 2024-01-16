@@ -55,7 +55,7 @@ F-measure이다.
 정답: **Half of my heart is in Havana ooh na na**<br/>
 예측한 문장: **Half as my heart is in Obama ohh na**<br/>
 
-일때 정밀도의 값은 7/9 = 78%, 재현율은 7/10 = 70%, F-measure의 값은 (0.78*0.7)/{0.5*(0.78+0.7)}이다.
+일때 정밀도의 값은 7/9 = 78%, 재현율은 7/10 = 70%, F-measure의 값은 (0.78\*0.7)/{0.5\*(0.78+0.7)} = 73.78%이다.
 <br/>
 
 생성 모델에서는 일반적인 평가지표인 정확도를 사용하지 않는다. 그 이유로는 실제 정답이 You very cute라는 문장을 모델이 Oh You very cute라는 문장으로
